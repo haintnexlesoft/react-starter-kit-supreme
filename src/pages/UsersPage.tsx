@@ -222,6 +222,12 @@ const UsersPage = () => {
             <h1 className="text-xl font-semibold tracking-tight text-foreground">{t("users_page.title")}</h1>
             <p className="text-sm text-muted-foreground">{t("users_page.subtitle")}</p>
           </div>
+          {isAdmin && (
+            <Button onClick={() => setInviteOpen(true)} className="gap-2">
+              <UserPlus className="h-4 w-4" />
+              {t("users_page.invite_user")}
+            </Button>
+          )}
         </div>
 
         <Card>
