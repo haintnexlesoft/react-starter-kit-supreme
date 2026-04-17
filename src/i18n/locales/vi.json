@@ -81,7 +81,12 @@
     "admin_only": "Chỉ admin mới có thể thực hiện",
     "no_users": "Không tìm thấy người dùng",
     "toggle_active": "Chuyển trạng thái",
-    "search_placeholder": "Tìm kiếm người dùng..."
+    "search_placeholder": "Tìm kiếm người dùng...",
+    "invite_user": "Mời người dùng",
+    "invite_user_desc": "Gửi email mời. Người dùng sẽ đặt mật khẩu qua link trong email.",
+    "send_invite": "Gửi lời mời",
+    "invite_sent": "Đã gửi lời mời",
+    "invite_sent_desc": "{{email}} sẽ nhận được email trong giây lát."
   },
   "projects": {
     "title": "Dự án",

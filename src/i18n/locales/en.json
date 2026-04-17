@@ -81,7 +81,12 @@
     "admin_only": "Only admins can perform this action",
     "no_users": "No users found",
     "toggle_active": "Toggle active status",
-    "search_placeholder": "Search users..."
+    "search_placeholder": "Search users...",
+    "invite_user": "Invite User",
+    "invite_user_desc": "Send an invitation email. The user will set their password via the invite link.",
+    "send_invite": "Send Invite",
+    "invite_sent": "Invitation sent",
+    "invite_sent_desc": "{{email}} will receive an email shortly."
   },
   "projects": {
     "title": "Projects",
