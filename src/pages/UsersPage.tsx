@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Shield, Search, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Shield, Search, X, UserPlus } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -47,6 +47,12 @@ const UsersPage = () => {
   const [deleteUser, setDeleteUser] = useState<Profile | null>(null);
   const [rolesUser, setRolesUser] = useState<Profile | null>(null);
   const [selectedRole, setSelectedRole] = useState<"admin" | "editor" | "viewer">("viewer");
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteForm, setInviteForm] = useState<{ email: string; display_name: string; role: "admin" | "editor" | "viewer" }>({
+    email: "",
+    display_name: "",
+    role: "viewer",
+  });
 
   // Fetch profiles
   const { data: profiles = [], isLoading } = useQuery({
@@ -158,6 +164,31 @@ const UsersPage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user_roles"] });
       toast({ title: t("users_page.success"), description: t("users_page.role_removed") });
+    },
+    onError: (err: Error) => {
+      toast({ title: t("users_page.error"), description: err.message, variant: "destructive" });
+    },
+  });
+
+  // Invite user mutation
+  const inviteUser = useMutation({
+    mutationFn: async (payload: { email: string; display_name: string; role: string }) => {
+      const { data, error } = await supabase.functions.invoke("invite-user", {
+        body: { ...payload, redirect_to: `${window.location.origin}/auth` },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return data;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["user_roles"] });
+      toast({
+        title: t("users_page.invite_sent"),
+        description: t("users_page.invite_sent_desc", { email: vars.email }),
+      });
+      setInviteOpen(false);
+      setInviteForm({ email: "", display_name: "", role: "viewer" });
     },
     onError: (err: Error) => {
       toast({ title: t("users_page.error"), description: err.message, variant: "destructive" });
