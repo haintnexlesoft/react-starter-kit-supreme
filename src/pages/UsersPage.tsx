@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Shield, Search, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Shield, Search, X, UserPlus } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -47,6 +47,12 @@ const UsersPage = () => {
   const [deleteUser, setDeleteUser] = useState<Profile | null>(null);
   const [rolesUser, setRolesUser] = useState<Profile | null>(null);
   const [selectedRole, setSelectedRole] = useState<"admin" | "editor" | "viewer">("viewer");
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteForm, setInviteForm] = useState<{ email: string; display_name: string; role: "admin" | "editor" | "viewer" }>({
+    email: "",
+    display_name: "",
+    role: "viewer",
+  });
 
   // Fetch profiles
   const { data: profiles = [], isLoading } = useQuery({
@@ -164,6 +170,31 @@ const UsersPage = () => {
     },
   });
 
+  // Invite user mutation
+  const inviteUser = useMutation({
+    mutationFn: async (payload: { email: string; display_name: string; role: string }) => {
+      const { data, error } = await supabase.functions.invoke("invite-user", {
+        body: { ...payload, redirect_to: `${window.location.origin}/auth` },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return data;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["user_roles"] });
+      toast({
+        title: t("users_page.invite_sent"),
+        description: t("users_page.invite_sent_desc", { email: vars.email }),
+      });
+      setInviteOpen(false);
+      setInviteForm({ email: "", display_name: "", role: "viewer" });
+    },
+    onError: (err: Error) => {
+      toast({ title: t("users_page.error"), description: err.message, variant: "destructive" });
+    },
+  });
+
   const filtered = profiles.filter(
     (p) =>
       p.display_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -191,6 +222,12 @@ const UsersPage = () => {
             <h1 className="text-xl font-semibold tracking-tight text-foreground">{t("users_page.title")}</h1>
             <p className="text-sm text-muted-foreground">{t("users_page.subtitle")}</p>
           </div>
+          {isAdmin && (
+            <Button onClick={() => setInviteOpen(true)} className="gap-2">
+              <UserPlus className="h-4 w-4" />
+              {t("users_page.invite_user")}
+            </Button>
+          )}
         </div>
 
         <Card>
@@ -429,6 +466,65 @@ const UsersPage = () => {
               </div>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invite User Dialog */}
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("users_page.invite_user")}</DialogTitle>
+            <DialogDescription>{t("users_page.invite_user_desc")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>{t("users_page.email")}</Label>
+              <Input
+                type="email"
+                value={inviteForm.email}
+                onChange={(e) => setInviteForm((f) => ({ ...f, email: e.target.value }))}
+                placeholder={t("users_page.email_placeholder")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t("users_page.display_name")}</Label>
+              <Input
+                value={inviteForm.display_name}
+                onChange={(e) => setInviteForm((f) => ({ ...f, display_name: e.target.value }))}
+                placeholder={t("users_page.display_name_placeholder")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t("users_page.role")}</Label>
+              <Select
+                value={inviteForm.role}
+                onValueChange={(v) => setInviteForm((f) => ({ ...f, role: v as any }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLES.map((r) => (
+                    <SelectItem key={r} value={r} className="capitalize">
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteOpen(false)}>
+              {t("users_page.cancel")}
+            </Button>
+            <Button
+              onClick={() => inviteUser.mutate(inviteForm)}
+              disabled={inviteUser.isPending || !inviteForm.email}
+            >
+              <UserPlus className="h-4 w-4 mr-1" />
+              {t("users_page.send_invite")}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </DashboardLayout>
