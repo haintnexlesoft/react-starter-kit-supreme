@@ -468,6 +468,65 @@ const UsersPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Invite User Dialog */}
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("users_page.invite_user")}</DialogTitle>
+            <DialogDescription>{t("users_page.invite_user_desc")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>{t("users_page.email")}</Label>
+              <Input
+                type="email"
+                value={inviteForm.email}
+                onChange={(e) => setInviteForm((f) => ({ ...f, email: e.target.value }))}
+                placeholder={t("users_page.email_placeholder")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t("users_page.display_name")}</Label>
+              <Input
+                value={inviteForm.display_name}
+                onChange={(e) => setInviteForm((f) => ({ ...f, display_name: e.target.value }))}
+                placeholder={t("users_page.display_name_placeholder")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t("users_page.role")}</Label>
+              <Select
+                value={inviteForm.role}
+                onValueChange={(v) => setInviteForm((f) => ({ ...f, role: v as any }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLES.map((r) => (
+                    <SelectItem key={r} value={r} className="capitalize">
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteOpen(false)}>
+              {t("users_page.cancel")}
+            </Button>
+            <Button
+              onClick={() => inviteUser.mutate(inviteForm)}
+              disabled={inviteUser.isPending || !inviteForm.email}
+            >
+              <UserPlus className="h-4 w-4 mr-1" />
+              {t("users_page.send_invite")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
