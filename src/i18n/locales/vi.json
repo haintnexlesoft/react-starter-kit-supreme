@@ -124,6 +124,7 @@
     "display_name": "Tên hiển thị",
     "display_name_placeholder": "Nhập tên của bạn",
     "save": "Lưu thay đổi",
+    "account_updated": "Cập nhật tài khoản thành công",
     "notifications": "Thông báo",
     "notifications_desc": "Cấu hình cách nhận thông báo",
     "email_notifications": "Email thông báo",

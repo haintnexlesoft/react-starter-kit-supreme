@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,10 +8,45 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const SettingsPage = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { t } = useTranslation();
+  const [editForm, setEditForm] = useState({ display_name: "" });
+
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", user.id).single();
+      if (error) throw error;
+      return data as Profile;
+    },
+  });
+
+  const updateProfile = useMutation({
+    mutationFn: async ({ display_name }: {display_name: string}) => {
+      const { error } = await supabase
+          .from("profiles")
+          .update({ display_name })
+          .eq("id", profile.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      toast({ title: t("users_page.success"), description: t("settings.account_updated") });
+    },
+    onError: (err: Error) => {
+      toast({ title: t("users_page.error"), description: err.message, variant: "destructive" });
+    },
+  });
 
   return (
     <DashboardLayout>
@@ -32,9 +68,18 @@ const SettingsPage = () => {
             </div>
             <div className="space-y-2">
               <Label>{t("settings.display_name")}</Label>
-              <Input placeholder={t("settings.display_name_placeholder")} />
+              <Input defaultValue={profile?.display_name || ""}
+                     onChange={(e) => setEditForm((f) => ({ ...f, display_name: e.target.value }))}
+                     placeholder={t("settings.display_name_placeholder")} />
             </div>
-            <Button>{t("settings.save")}</Button>
+            <Button onClick={() => {
+                   updateProfile.mutate(editForm);
+                     }
+                 }
+                disabled={updateProfile.isPending}
+             >
+              {t("settings.save")}
+            </Button>
           </CardContent>
         </Card>
 

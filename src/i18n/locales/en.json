@@ -124,6 +124,7 @@
     "display_name": "Display Name",
     "display_name_placeholder": "Enter your name",
     "save": "Save changes",
+    "account_updated": "Account updated successfully",
     "notifications": "Notifications",
     "notifications_desc": "Configure how you receive notifications",
     "email_notifications": "Email notifications",
